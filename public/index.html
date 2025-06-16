@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>질문 및 답변</title>
+    <link rel="stylesheet" href="style.css"> 
+</head>
+<body>
+    <div class="container">
+        <h1>질문 및 답변</h1>
+        <a href="admin.html" class="admin-link">관리자 페이지로 이동</a>
+
+        <div id="category-buttons" class="category-buttons"></div>
+
+        <div id="questions-container">
+            </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io('http://localhost:3000'); 
+        let currentCategory = 'all'; 
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchCategories(); 
+            fetchQuestions();  
+        });
+
+        socket.on('qa_updated', () => {
+            console.log('QA 업데이트 이벤트 수신, 질문 목록 새로고침');
+            fetchCategories(); 
+            fetchQuestions(); 
+        });
+
+        async function fetchCategories() {
+            try {
+                const response = await fetch('http://localhost:3000/api/categories');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const categories = await response.json();
+                const categoryButtonsDiv = document.getElementById('category-buttons');
+                categoryButtonsDiv.innerHTML = ''; 
+
+                const allButton = document.createElement('button');
+                allButton.classList.add('category-button');
+                allButton.textContent = '전체';
+                allButton.dataset.category = 'all';
+                allButton.addEventListener('click', () => selectCategory('all'));
+                categoryButtonsDiv.appendChild(allButton);
+
+                categories.forEach(category => {
+                    const button = document.createElement('button');
+                    button.classList.add('category-button');
+                    button.textContent = category;
+                    button.dataset.category = category;
+                    button.addEventListener('click', () => selectCategory(category));
+                    categoryButtonsDiv.appendChild(button);
+                });
+
+                updateCategoryButtonActiveState();
+
+            } catch (error) {
+                console.error('카테고리를 가져오는 중 오류 발생:', error);
+            }
+        }
+
+        function selectCategory(category) {
+            currentCategory = category; 
+            fetchQuestions(); 
+            updateCategoryButtonActiveState(); 
+        }
+
+        function updateCategoryButtonActiveState() {
+            document.querySelectorAll('.category-button').forEach(button => {
+                if (button.dataset.category === currentCategory) {
+                    button.classList.add('active');
+                } else {
+                    button.classList.remove('active');
+                }
+            });
+        }
+
+        async function fetchQuestions() {
+            try {
+                const url = currentCategory === 'all' 
+                    ? 'http://localhost:3000/api/questions' 
+                    : `http://localhost:3000/api/questions?category=${encodeURIComponent(currentCategory)}`;
+
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const questions = await response.json();
+                const container = document.getElementById('questions-container');
+                container.innerHTML = ''; 
+
+                questions.forEach(question => {
+                    const questionDiv = document.createElement('div');
+                    questionDiv.classList.add('question-item');
+                    
+                    questionDiv.innerHTML = `
+                        <div class="question-header" data-question-id="${question.id}">
+                            <h3>Q: ${question.question_text}</h3>
+                            <span class="toggle-icon">></span>
+                        </div>
+                        <div class="answer-list" id="answers-${question.id}">
+                            </div>
+                        <p class="question-category">카테고리: ${question.category || '미지정'}</p>
+                    `;
+                    container.appendChild(questionDiv);
+
+                    const answerListDiv = document.getElementById(`answers-${question.id}`);
+                    if (question.answers && question.answers.length > 0) {
+                        question.answers.forEach(answer => {
+                            const answerDiv = document.createElement('div');
+                            answerDiv.classList.add('answer-item');
+                            let answerContent = `<p>A: ${answer.answer_text}</p>`;
+                            if (answer.image_url) {
+                                answerContent += `<img src="http://localhost:3000${answer.image_url}" alt="답변 이미지">`;
+                            }
+                            answerDiv.innerHTML = answerContent;
+                            answerListDiv.appendChild(answerDiv);
+                        });
+                    } else {
+                        answerListDiv.innerHTML = '<p>아직 답변이 없습니다.</p>';
+                    }
+
+                    const questionHeader = questionDiv.querySelector('.question-header');
+                    const toggleIcon = questionDiv.querySelector('.toggle-icon');
+
+                    questionHeader.addEventListener('click', () => {
+                        answerListDiv.classList.toggle('visible');
+                        toggleIcon.classList.toggle('expanded');
+                    });
+                });
+
+            } catch (error) {
+                console.error('질문을 가져오는 중 오류 발생:', error);
+                document.getElementById('questions-container').innerHTML = '<p>질문을 불러오는 데 실패했습니다. 서버를 확인해 주세요.</p>';
+            }
+        }
+    </script>
+</body>
+</html>
