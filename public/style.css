@@ -100,7 +100,7 @@ form select:focus {
 
 /* 버튼 기본 스타일 */
 button {
-    background-color: #007bff;
+    background-color: #101010;
     color: white;
     padding: 12px 20px;
     border: none;
@@ -109,11 +109,13 @@ button {
     font-size: 1em;
     font-weight: 500;
     transition: background-color 0.3s ease, transform 0.2s ease;
+    text-decoration: none;
 }
 
 button:hover {
-    background-color: #0056b3;
+    background-color: #535252;
     transform: translateY(-1px);
+    text-decoration: none;
 }
 
 button:active {
@@ -174,7 +176,7 @@ button:active {
 }
 
 .question-item h3 {
-    color: #0056b3;
+    color: #3a47d2;
     margin-top: 0;
     margin-bottom: 10px;
     font-size: 1.4em;
@@ -262,14 +264,15 @@ button:active {
     display: block;
     text-align: right;
     margin-bottom: 20px;
-    color: #007bff;
+    color: #101010;
     text-decoration: none;
     font-weight: 500;
+    text-decoration: none;
 }
 
 .admin-link:hover {
-    text-decoration: underline;
-    color: #0056b3;
+    color: #0a0a0a;
+    text-decoration: none;
 }
 
 /* index.html - 카테고리 버튼 */

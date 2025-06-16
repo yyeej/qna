@@ -18,7 +18,7 @@ const server = http.createServer(app);
 // HTTP 서버에 Socket.IO 연결
 const io = new Server(server, {
     cors: { // CORS 설정 (프론트엔드 URL에 맞게 수정 필요)
-        origin: ["http://localhost:3000"], // 프론트엔드 도메인 지정
+        origin: ["http://34.46.197.167"], // 프론트엔드 도메인 지정
         methods: ["GET", "POST", "PUT", "DELETE"]
     }
 });
